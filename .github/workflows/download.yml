@@ -1,0 +1,98 @@
+name: 24/7 Video Downloader
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'  # Every 2 hours
+  workflow_dispatch:  # Manual trigger option
+
+jobs:
+  download-videos:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      
+      - name: Install dependencies
+        run: |
+          pip install yt-dlp
+          pip install requests
+          
+      - name: Check for uploaded_videos.json
+        id: check_state
+        run: |
+          if [ -f uploaded_videos.json ]; then
+            echo "state_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "state_exists=false" >> $GITHUB_OUTPUT
+            echo '[]' > uploaded_videos.json
+          fi
+      
+      - name: Download videos
+        run: |
+          python download_script.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Commit updated state
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add uploaded_videos.json
+          git diff --staged --quiet || git commit -m "Update uploaded videos state [skip ci]"
+          git push
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
